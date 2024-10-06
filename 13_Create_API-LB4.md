@@ -475,4 +475,3 @@ ip neighbor
 # References
 [GitHub](https://github.com/acassen/keepalived)  
 [RedHat Simple Configuratiomn](https://www.redhat.com/sysadmin/keepalived-basics)  
-[Flat Icon](https://www.flaticon.com/free-icons/user)  

@@ -282,11 +282,6 @@ k3s1server2.kloud.lan   Ready    control-plane,master   5d      v1.30.5+k3s1   1
 k3s1server3.kloud.lan   Ready    control-plane,master   5d      v1.30.5+k3s1   10.30.100.53   <none>        Ubuntu 24.04.1 LTS   6.11.0-061100-generic   containerd://1.7.21-k3s2
 ```
 
-# References
-[High Availability External DB](https://docs.k3s.io/datastore/ha)  
-[k3s server Options](https://docs.k3s.io/cli/server)  
-[K3s Configuration Options](https://docs.k3s.io/installation/configuration)  
-
 # Troubleshoot
 
 ## Re installing K3s
@@ -323,3 +318,8 @@ A value of `1` means the key has been deleted successfully.
 ```
 1
 ```
+
+# References
+[High Availability External DB](https://docs.k3s.io/datastore/ha)  
+[k3s server Options](https://docs.k3s.io/cli/server)  
+[K3s Configuration Options](https://docs.k3s.io/installation/configuration)  
