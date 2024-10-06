@@ -26,8 +26,8 @@ The high level steps to create our High Availability K3s Cluster are:
 |Role|FQDN|IP|OS|Kernel|RAM|vCPU|Node|
 |----|----|----|----|----|----|----|----|
 |Load Balancer (VIP)|k3s1api.kloud.lan|10.30.100.100|N/A|N/A|N/A|N/A|N/A|
-|Load Balancer|k3s1vrrp1.kloud.lan|10.30.100.101/|Ubuntu 24.04|6.11.0|4G|2|pve1|
-|Load Balancer|k3s1vrrp2.kloud.lan|10.30.100.102/|Ubuntu 24.04|6.11.0|4G|2|pve1|
+|Load Balancer|k3s1vrrp1.kloud.lan|10.30.100.101|Ubuntu 24.04|6.11.0|4G|2|pve1|
+|Load Balancer|k3s1vrrp2.kloud.lan|10.30.100.102|Ubuntu 24.04|6.11.0|4G|2|pve1|
 |server|k3s1server1.kloud.lan|10.30.100.51|Ubuntu 24.04|6.11.0|4G|2|pve1|
 |server|k3s1server2.kloud.lan|10.30.100.52|Ubuntu 24.04|6.11.0|4G|2|pve1|
 |server|k3s1server3.kloud.lan|10.30.100.53|Ubuntu 24.04|6.11.0|4G|2|pve1|
