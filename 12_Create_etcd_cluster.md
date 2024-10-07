@@ -13,10 +13,10 @@ Prerequisites:
   - TCP port `2380` is the traffic for server-to-server communication
   - TCP port `2381` is the traffic for the endpoints `/metrics` and `/health` (Optional)
 - Each host must have `systemd` and a `bash` compatible shell installed.
-- Some infrastructure to copy files between hosts. For example, `scp` can satisfy this requirement.
+- Some infrastructure to copy files between hosts. For example, `scp` can satisfy this requirement. In the preceding step you should have installed the SSH public key of your bastion host on every etcd VMs.
 
 # Setup an External ETCD Cluster
-In this tutorial we will configure a three-node TLS enabled `etcd` cluster that can act as an external datastore, like a Kubernetes H.A. Cluster 😉
+In this tutorial we will configure a three-node TLS enabled `etcd` cluster that will act as an external datastore for your K3s Kubernetes H.A. Cluster.
 
 |Role|FQDN|IP|OS|Kernel|RAM|vCPU|Node|
 |----|----|----|----|----|----|----|----|
@@ -25,7 +25,7 @@ In this tutorial we will configure a three-node TLS enabled `etcd` cluster that 
 |etcd database|k3s1etcd3.kloud.lan|10.30.100.73|Ubuntu 24.04|6.11.0|4G|2|pve1|
 
 > [!NOTE]  
-> Everything from here is done on `k8s2bastion1` in the directory `~/k3s1/`. It is **VERY** important that you backup this directory and keep it secure since it will contain the TLS certificates for the communication between the etcd memebers.
+> Everything from here is done on `k8s2bastion1` in the directory `~/k3s1/`. It is **VERY** important that you backup this directory and keep it secure since it will contain the TLS certificates for the communication between the etcd members.
 
 # Terminal Multiplexer
 I'm using `tmux` to access all the VMs at the same time. Create the following script to start a session on each VM. Adjust the variable `ssh_list`:
@@ -38,19 +38,22 @@ ssh_list=( k3s1etcd1 k3s1etcd2 k3s1etcd3 )
 
 split_list=()
 for ssh_entry in "${ssh_list[@]:1}"; do
-    split_list+=( split-pane ssh "$ssh_entry" ';' )
+  split_list+=( split-pane ssh "$ssh_entry" ';' )
 done
 
 tmux new-session ssh "${ssh_list[0]}" ';' \
-    "${split_list[@]}" \
-    select-layout tiled ';' \
-    set-option -w synchronize-panes
+  "${split_list[@]}" \
+  select-layout tiled ';' \
+  set-option -w synchronize-panes
 EOF
 chmod +x ${FILE}
 ```
 
 # Download the binaries
-Install the latest version of the `etcd` binaries on **each** of the Linux `etcd` node. `etcdctl` is a command line tool for interacting with the `etcd` database(s) in a cluster.
+Install the latest version of the `etcd` binaries on **each** of the Linux `etcd` node. Three binaries will be installed on each server in the directory `/usr/local/bin/`.
+- etcd: The etcd server
+- etcdctl: a command line tool for interacting with the etcd server
+- etcdutl: a command line administration utility for etcd server
 
 > [!IMPORTANT]  
 > The commands below are executed on **every** etcd host. I used `tmux`.
@@ -122,15 +125,19 @@ openssl req -new -sha256 -x509 -key ${CA_CERT}.key -days 7300 \
 -out ${CA_CERT}.crt
 
 # Print the certificate
-openssl x509 -text -noout -in ${CA_CERT}.crt
+# openssl x509 -text -noout -in ${CA_CERT}.crt
+# Verification of certificate and private key. The next 2 checksum must be identical!
+printf "The checksums MUST be identical\n"
+openssl x509 -pubkey -in ${CA_CERT}.crt -noout | openssl sha256 | awk -F '= ' '{print $2}'
+openssl pkey -pubout -in ${CA_CERT}.key | openssl sha256 | awk -F '= ' '{print $2}'
 ```
 
 This results in two files:
-- The file `k3s1-etcd-ca.crt` is the CA certificate
-- The file `k3s1-etcd-ca.key` is the CA private key
+- The file `k3s1-etcd-ca.crt` is the CA certificate.
+- The file `k3s1-etcd-ca.key` is the CA private key. Keep this file in a safe place.
 
 ## Generate Node Certificates
-You could use the same client certificate of every `etcd` node and it will work fine. I've decided to use different certificate for each node. The following script will generate the certificate and key for every `etcd` node in the cluster. Delete the `csr` files as they are not needed anymore:
+You could use the same client certificate of every `etcd` node and it will work fine. I've decided to use different certificate for each node. The following script will generate the certificate and key for every `etcd` node in the cluster.
 
 ```sh
 cat <<'EOF' > gen_cert.sh
@@ -262,7 +269,8 @@ At this point, we have the certificates and keys generated for the CA and all th
 We need to to distribute those certificates and keys to each `etcd` node in the cluster. I've made a script. Adusts the nodes and execute.
 
 > [!IMPORTANT]  
-> Adjust the variables `ETCD_NODES` and `CA_CERT` in the script below.
+> - Adjust the variables `ETCD_NODES` and `CA_CERT` in the script below.
+> - It is assume that SSH doesn't require a password.
 
 ```sh
 FILE="scp-etcd.sh"
@@ -393,7 +401,7 @@ EOF
 > The endpoint `listen-client-urls` still answers to `https://.../metrics`.
 
 # Configuring and Starting the `etcd` Cluster
-On every node, create the file `/etc/systemd/system/etcd.service` with the following contents. I will be using `tmux` to execute the command once aon all the nodes:
+On every node, create the file `/etc/systemd/system/etcd.service` with the following contents. I will be using `tmux` to execute the command once on all the `etcd` servers:
 ```sh
 cat <<EOF | sudo tee /lib/systemd/system/etcd.service > /dev/null
 [Unit]
@@ -415,10 +423,11 @@ WantedBy=multi-user.target
 EOF
 ```
 
-[etcd service file](https://github.com/etcd-io/etcd/blob/main/contrib/systemd/etcd.service)
+> [!NOTE]  
+> The `etcd` service file can be found [here](https://github.com/etcd-io/etcd/blob/main/contrib/systemd/etcd.service)
 
 # Start `etcd` service
-Start the `etcd` service on all VMs:
+Start the `etcd` service on all VMs, again using `tmux`:
 ```sh
 sudo systemctl daemon-reload
 sudo systemctl enable --now etcd
@@ -426,10 +435,11 @@ sudo systemctl status etcd
 ```
 
 # Testing and Validating the Cluster
-To interact with the cluster we will be using `etcdctl`. It's the utility to interact with the `etcd` cluster. This utility as been installed in `/usr/local/bin` on etcd nodes. Let's also install it on a bastion host.
+To interact with the cluster we will be using `etcdctl`. It's the utility to interact with the `etcd` cluster. This utility as been installed in `/usr/local/bin` on all `etcd` servers. Let's also install it on our bastion host.
 
 Install `etcdctl` on the bastion host:
 ```sh
+# Install both etcd utilities, etcdctl and etcdutl, in "/usr/local/bin/"
 ARCH=$(dpkg --print-architecture)
 VER=$(curl -s https://api.github.com/repos/etcd-io/etcd/releases/latest|grep tag_name | cut -d '"' -f 4)
 printf "etcd version: %s for ARCH:%s\n" "${VER}" "${ARCH}"
@@ -443,9 +453,13 @@ rm etcd-${VER}-linux-${ARCH}.tar.gz
 unset VER
 ```
 
-You can export these environment variables and connect to the clutser without specifying the values each time:
+You can export these environment variables and connect to the clutser without specifying the values each time on the command line.
+- Pick any one of the etcd server, it doesn't matter which one
+- You need to have the CA TLS certificate used to sign the `etcd` TLS server certificate
+- You need to be in the directory where you have the TLS certificate and private key for the `etcd` server
+
 ```sh
-# Pick any one of the etcd server
+# Pick any one of the etcd server, it doesn't matter which one
 ETCD_NAME=k3s1etcd1
 export ETCDCTL_ENDPOINTS=https://k3s1etcd1.kloud.lan:2379,https://k3s1etcd2.kloud.lan:2379,https://k3s1etcd3.kloud.lan:2379
 export ETCDCTL_CACERT=./k3s1-etcd-ca.crt
@@ -454,9 +468,9 @@ export ETCDCTL_KEY=./${ETCD_NAME}.key
 ```
 
 > [!NOTE]  
-> `export ETCDCTL_API=3` is not needed anymore with version 3.4.x  
+> The variable `export ETCDCTL_API=3` is not needed anymore with version >3.4.x  
 > You can use any of the three client certificate/key with `ETCDCTL_CERT` and `ETCDCTL_KEY` because they are all signed by the same CA.  
-> You can generate another certificate/key pair for your bastion host, as long as the certificate is signed by the `etcd-ca`.  
+> You can generate another certificate/key pair for your bastion host, as long as the certificate is signed by the `k3s1-etcd-ca`.  
 
 ## Check Cluster status
 To execute the next command, you can be on any host that:

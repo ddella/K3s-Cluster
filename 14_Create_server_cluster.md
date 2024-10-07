@@ -9,7 +9,7 @@ For example, a command like the following could be used to install the K3s serve
 We will be using three Ubuntu Server 24.04 with Linux Kernel 6.11.0.
 
 # Setup K3s Server Nodes
-In this tutorial we will configure a three-node TLS enabled `etcd` cluster that can act as an external datastore, like a Kubernetes H.A. Cluster 😉
+In this tutorial we will configure three K3s servers to build a K3s Cluster in H.A.mode 😉
 
 |Role|FQDN|IP|OS|Kernel|RAM|vCPU|Node|
 |----|----|----|----|----|----|----|----|
@@ -18,7 +18,7 @@ In this tutorial we will configure a three-node TLS enabled `etcd` cluster that 
 |server|k3s1server3.kloud.lan|10.30.100.53|Ubuntu 24.04|6.11.0|4G|2|pve1|
 
 > [!NOTE]  
-> Everything from here is done on `k8s2bastion1` in the directory `~/k3s1/`
+> Everything from here is done on `k8s2bastion1` in the directory `$HOME/k3s1/`
 
 # Terminal Multiplexer
 I'm using `tmux` to access all the VMs at the same time. Create the following script to start a session on each VM. Adjust the variable `ssh_list`:
@@ -31,23 +31,25 @@ ssh_list=( k3s1server1 k3s1server2 k3s1server3 )
 
 split_list=()
 for ssh_entry in "${ssh_list[@]:1}"; do
-    split_list+=( split-pane ssh "$ssh_entry" ';' )
+  split_list+=( split-pane ssh "$ssh_entry" ';' )
 done
 
 tmux new-session ssh "${ssh_list[0]}" ';' \
-    "${split_list[@]}" \
-    select-layout tiled ';' \
-    set-option -w synchronize-panes
+  "${split_list[@]}" \
+  select-layout tiled ';' \
+  set-option -w synchronize-panes
 EOF
 chmod +x ${FILE}
 ```
 
----
-
 ### Copy certificates
 When I created the `etcd` cluster I created certificates from my own CA (bunch of scripts with OpenSSL 😉). All the certificates were created on my bastion `k8s2bastion1` node. Copy the `etcd` CA certificate and private key, from `k8s2bastion1` to `k3s1server1` in the directory `$HOME`.
 
-The following commands must be executed **from** the server where the `etcd` certificates were generated. In my case I used my `k8s2bastion1` host:
+The following commands must be executed **from** the server where the `etcd` certificates were generated. In my case I used my `k8s2bastion1` host. Each line will copy the necessary TLS certificate/private key to each K3s server.
+- k3s1-etcd-ca.crt is the CA certificate
+- apiserver-etcd-client.crt is the client certificate to access any `etcd` server
+- apiserver-etcd-client.key is the client key that macthes the certificate above
+
 ```sh
 # ssh k8s2bastion1
 # cd in the directory where you generated the certificates
@@ -57,7 +59,7 @@ rsync --mkpath --rsync-path="sudo rsync" k3s1-etcd-ca.crt apiserver-etcd-client.
 rsync --mkpath --rsync-path="sudo rsync" k3s1-etcd-ca.crt apiserver-etcd-client.crt apiserver-etcd-client.key daniel@k3s1server3:/home/daniel/
 ```
 
-You should have the following files on all server node.
+You should have the following files on all K3s server node.
 ```
 /home/daniel
 ├── k3s1-etcd-ca.crt
@@ -66,12 +68,10 @@ You should have the following files on all server node.
 ```
 
 # Install K3s Server node(s)
-K3s can use a config file. By default, values present in a YAML file located at `/etc/rancher/k3s/config.yaml` will be used on install.
-
-Multiple configuration files are supported. By default, configuration files are read from `/etc/rancher/k3s/config.yaml` and `/etc/rancher/k3s/config.yaml.d/*.yaml` in alphabetical order.
+K3s can use a config file. By default, values present in a YAML file located at `/etc/rancher/k3s/config.yaml` will be used on the initial bootstrap. Multiple configuration files are supported. By default, configuration files are read from `/etc/rancher/k3s/config.yaml` and `/etc/rancher/k3s/config.yaml.d/*.yaml` in alphabetical order.
 
 > [!IMPORTANT]  
-> You have to be on `k3s1server1` to execute to bootstrap the server.
+> You have to be on `k3s1server1` to bootstrap the server.
 
 ## Create Configuration file
 ```sh
@@ -132,7 +132,8 @@ sudo kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/nu
 source ~/.bashrc
 ```
 
-## Copy Config file
+## Copy K3s Config file
+The K3s configuration files contains the necessary information to connect to the K3s Cluster API.
 ```sh
 mkdir -p $HOME/.kube
 sudo cp -i /etc/rancher/k3s/k3s.yaml $HOME/.kube/config-k3s1
@@ -285,11 +286,9 @@ k3s1server3.kloud.lan   Ready    control-plane,master   5d      v1.30.5+k3s1   1
 # Troubleshoot
 
 ## Re installing K3s
-If you use etcd and try to re-install K3s, you might endup with the error message: `msg="starting kubernetes: preparing server: bootstrap data already found and encrypted with different token"`
+If you use `etcd` outside the K3s cluster and try to re-install it, you might endup with the error message: `msg="starting kubernetes: preparing server: bootstrap data already found and encrypted with different token"`. The K3s unsintall script can't modify the `etcd` database if it's outside the K3s cluster. To fully uninstall K3s, you need to delete the `/bootstrap` key in the database.
 
-You need to delete the `/bootstrap` key in the database.
-
-Prepare to connect to any etcd node. You need the binary `etcdctl`, the CA certificate and a client certificate and private key for the etcd cluster:
+Prepare to connect to any `etcd` node. You need the binary `etcdctl`, the CA certificate and a client certificate and private key for the `etcd` cluster:
 ```sh
 ETCD_NAME=k3s1etcd1
 export ETCDCTL_ENDPOINTS=https://k3s1etcd1.kloud.lan:2379,https://k3s1etcd2.kloud.lan:2379,https://k3s1etcd3.kloud.lan:2379
@@ -318,6 +317,8 @@ A value of `1` means the key has been deleted successfully.
 ```
 1
 ```
+
+After this steps, you should be able to reinstall K3s using the same `etcd` Cluster.
 
 # References
 [High Availability External DB](https://docs.k3s.io/datastore/ha)  

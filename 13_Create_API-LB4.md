@@ -1,32 +1,32 @@
 <a name="readme-top"></a>
 
 # Nginx as a load balancer
-This section is about configuring an Nginx reverse proxy/load balancer to front the Kubernetes API server. We are building a K8s cluster in high availability with six (6) master node. When a request arrives for Kubernetes API, Nginx becomes a proxy and further forward that request to any healthy K8s Master node, then it forwards the response back to the client.
+This section is about configuring an Nginx reverse proxy/load balancer to front the K3s Kubernetes API server. We are building a K3s cluster in high availability with three (3) master nodes. When a request arrives for Kubernetes API, Nginx becomes a proxy and further forward that request to any healthy K3s Master node, then it forwards the response back to the client.
 
 This assumes that:
 - K3s API server runs on port 6443 with HTTPS
 - All K3s Master node runs the API via the URL: https://<master node>:6443
 
-Nginx will run on a bare metal/virtual Ubuntu server outside the K8s cluster.
+Nginx will run on a bare metal/virtual Ubuntu server outside the K3s cluster.
 
 ##  What is a Reverse Proxy
 Proxying is typically used to distribute the load among several servers, seamlessly show content from different websites, or pass requests for processing to application servers over protocols other than HTTP.
 
 When NGINX proxies a request, it sends the request to a specified proxied server, fetches the response, and sends it back to the client.
 
-In this tutorial, Nginx Reverse proxy receive inbound `HTTPS` requests and forward those requests to the K8s master nodes. It receives the outbound `HTTP` response from the API servers and forwards those requests to the original requester.
+In this tutorial, Nginx Reverse proxy receive inbound `HTTPS` requests and forward those requests to the K3s master nodes. It receives the outbound `HTTPS` response from the API servers and forwards those requests to the original requester.
 
 # Setup K3s Server Nodes
-In this tutorial we will configure a three-node TLS enabled `etcd` cluster that can act as an external datastore, like a Kubernetes H.A. Cluster 😉
+In this tutorial we will configure a two servers that will act as a load balancer in front the Kubernetes APIU Cluster.
 
 |Role|FQDN|IP|OS|Kernel|RAM|vCPU|Node|
 |----|----|----|----|----|----|----|----|
 |Load Balancer (VIP)|k3s1api.kloud.lan|10.30.100.100|Ubuntu 24.04|6.11.0|4G|2|N/A|
-|Load Balancer|k3s1vrrp1.kloud.lan|10.30.100.101/|Ubuntu 24.04|6.11.0|4G|2|pve1|
-|Load Balancer|k3s1vrrp2.kloud.lan|10.30.100.102/|Ubuntu 24.04|6.11.0|4G|2|pve1|
+|Load Balancer|k3s1vrrp1.kloud.lan|10.30.100.101|Ubuntu 24.04|6.11.0|4G|2|pve1|
+|Load Balancer|k3s1vrrp2.kloud.lan|10.30.100.102|Ubuntu 24.04|6.11.0|4G|2|pve1|
 
 > [!NOTE]  
-> Everything from here is done on `k8s2bastion1` in the directory `~/k3s1/`
+> Everything from here is done on `k8s2bastion1` in the directory `$HOME/k3s1/`
 
 # Terminal Multiplexer
 I'm using `tmux` to access all the VMs at the same time. Create the following script to start a session on each VM. Adjust the variable `ssh_list`:
@@ -39,13 +39,13 @@ ssh_list=( k3s1vrrp1 k3s1vrrp2 )
 
 split_list=()
 for ssh_entry in "${ssh_list[@]:1}"; do
-    split_list+=( split-pane ssh "$ssh_entry" ';' )
+  split_list+=( split-pane ssh "$ssh_entry" ';' )
 done
 
 tmux new-session ssh "${ssh_list[0]}" ';' \
-    "${split_list[@]}" \
-    select-layout tiled ';' \
-    set-option -w synchronize-panes
+  "${split_list[@]}" \
+  select-layout tiled ';' \
+  set-option -w synchronize-panes
 EOF
 chmod +x ${FILE}
 ```
@@ -60,7 +60,7 @@ NGINX Open Source is available in two versions:
 - **Mainline** - Includes the latest features and bug fixes and is always up to date. It is reliable, but it may include some experimental modules, and it may also have some number of new bugs.
 - **Stable** - Doesn't include all of the latest features, but has critical bug fixes that are always backported to the mainline version. We recommend the stable version for production servers.
 
-Of course I choosed the `Mainline` version to get all the latest features 😀
+Of course I choosed the `Mainline` version to get all the latest and the greatest features 😀
 
 Install the prerequisites:
 ```sh
@@ -124,7 +124,7 @@ curl http://127.0.0.1
 ## Configure Nginx for layer 4 Load Balancing
 This will be the initial configuration of Nginx. I've never been able to bootstrap a Kubernetes Cluster with a layer 7 Load Balancer due the `mTLS` configuration.
 
-Create another directory for our layer 4 Load Balancer. The reason is that the directive in `nginx.conf` file for our layer 4 and layer 7 load balancer are in different section:
+Create another directory for our layer 4 Load Balancer.
 ```sh
 sudo mkdir /etc/nginx/tcpconf.d/
 ```
@@ -137,9 +137,9 @@ stream {
         '$protocol $status $bytes_sent $bytes_received '
         '$session_time';
     upstream k3s1-api {
-        #server k3s1server1.kloud.lan:6443;
-        #server k3s1server2.kloud.lan:6443;
-        #server k3s1server3.kloud.lan:6443;
+        # server k3s1server1.kloud.lan:6443;
+        # server k3s1server2.kloud.lan:6443;
+        # server k3s1server3.kloud.lan:6443;
         server 10.30.100.51:6443;
         server 10.30.100.52:6443;
         server 10.30.100.53:6443;
@@ -207,7 +207,7 @@ Output on the client:
 </html>
 ```
 
->Both outputs are normal, since we don't have a K8s master node yet 😀
+>Both outputs are normal, since we don't have a K3s master node yet 😀
 
 When the load balancer will be running the message should look like this one:
 ```
@@ -223,7 +223,7 @@ When the load balancer will be running the message should look like this one:
 ```
 
 # Conclusion
-You have a Ubuntu server that acts as a load balancer for all API requests to K8s (ex.: `kubectl` command).
+You have a Ubuntu server that acts as a load balancer for all API requests to K3s (ex.: `kubectl` command).
 
 # References
 [Nginx Load Balancer](https://nginx.org/en/docs/http/load_balancing.html)  
@@ -231,8 +231,8 @@ You have a Ubuntu server that acts as a load balancer for all API requests to K8
 
 ---
 
-# Install Keepalived (master and slave)
-Let's get our hands dirty and learn about the installation and basic configuration of `keepalived` to server a simple web server. This section applies to both server, `k3s1vrrp1` and `k3s1vrrp2`.
+# Install Keepalived
+`keepalived` is a daemon that implements the VRRP protocol. VRRP is a fundamental brick for router failover. The Virtual Router Redundancy Protocol (VRRP) is a networking protocol that provides for automatic assignment of a VIP and MAC address to participating hosts. Let's get our hands dirty and learn about the installation and basic configuration of `keepalived`. This section applies to both server, `k3s1vrrp1` and `k3s1vrrp2`.
 
 This is a short guide on how to install `keepalived` package on Ubuntu 24.04:
 ```sh
@@ -242,7 +242,7 @@ sudo apt install keepalived
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-# Configure `keepalived` on `k3s1vrrp1`
+## Configure `keepalived` on `k3s1vrrp1`
 Create a Keepalived configuration file named `/etc/keepalived/keepalived.conf` on `k3s1vrrp1`.
 
 > [!NOTE]  
@@ -321,7 +321,7 @@ With the above configuration in place, you can start Keepalived on both servers 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-# Configure `keepalived` on `k3s1vrrp2`
+## Configure `keepalived` on `k3s1vrrp2`
 Create a Keepalived configuration file named `/etc/keepalived/keepalived.conf` on `k3s1vrrp2`. The only parameter to change here is the `state`.
 ```sh
 INTERFACE="enp1s0"
@@ -382,7 +382,7 @@ sudo systemctl restart keepalived
 sudo systemctl status keepalived
 ```
 
-- `k3s1vrrp1` should start as the VRRP master and owns the shared VIP address `10.101.2.10`
+- `k3s1vrrp1` should start as the VRRP master and owns the shared VIP address `10.30.100.100`
 - `k3s1vrrp2` should start as the VRRP backup
 
 You can check with the command:

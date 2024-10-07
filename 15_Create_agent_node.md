@@ -7,7 +7,7 @@ At this point you should have a K3s Cluster with at least 2 or mode server nodes
 We will be using three Ubuntu Server 24.04 with Linux Kernel 6.11.0.
 
 # Setup K3s Server Nodes
-In this tutorial we will configure three agent nodes.
+In this tutorial we will configure three agent nodes. You can configure more if you wish to.
 
 |Role|FQDN|IP|OS|Kernel|RAM|vCPU|Node|
 |----|----|----|----|----|----|----|----|
@@ -26,13 +26,13 @@ ssh_list=( k3s1agent1 k3s1agent2 k3s1agent3 )
 
 split_list=()
 for ssh_entry in "${ssh_list[@]:1}"; do
-    split_list+=( split-pane ssh "$ssh_entry" ';' )
+  split_list+=( split-pane ssh "$ssh_entry" ';' )
 done
 
 tmux new-session ssh "${ssh_list[0]}" ';' \
-    "${split_list[@]}" \
-    select-layout tiled ';' \
-    set-option -w synchronize-panes
+  "${split_list[@]}" \
+  select-layout tiled ';' \
+  set-option -w synchronize-panes
 EOF
 chmod +x ${FILE}
 ```
@@ -44,7 +44,7 @@ chmod +x ${FILE}
 Joining agent nodes in an HA cluster is the same as joining agent nodes in a single server cluster. You just need to specify the URL the agent should register to (either one of the server IPs or a fixed registration address) and the token it should use. This could be done on the command line but I prefer going with a configuration file.
 
 > [!NOTE]  
-> This has to be executed on an `agent` node not a bastion host.
+> This has to be executed on an `agent` server not a bastion host.
 
 ```sh
 sudo mkdir -p /etc/rancher/k3s/
@@ -85,7 +85,7 @@ mkdir -p $HOME/.kube
 sudo cp -i /etc/rancher/k3s/k3s.yaml $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 chmod 600 ~/.kube/config
-export KUBECONFIG=~/.kube/config
+export KUBECONFIG=$HOME/.kube/config
 # Adjust the API server address to our load balancer
 API_IPv4=$(dig +short k3s1api.kloud.lan)
 sed -i s/127.0.0.1:6443/${API_IPv4}:6443/ $HOME/.kube/config
@@ -94,7 +94,7 @@ sed -i s/127.0.0.1:6443/${API_IPv4}:6443/ $HOME/.kube/config
 > [!IMPORTANT]  
 > This WON'T survive after a restart.
 
-## Add node role
+## Add node role (Optional)
 I like to have a `ROLES` with `worker`, so I add a node role for each worker node with the command:
 ```sh
 for i in {1..3}; do kubectl label node k3s1agent${i}.kloud.lan node-role.kubernetes.io/worker=''; done

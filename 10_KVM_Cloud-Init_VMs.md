@@ -548,10 +548,8 @@ ssh -o StrictHostKeyChecking=accept-new ${TEST_IP}
 If you want to completly destroy the VMs and remove the disk image, use the script below:
 
 > [!WARNING]  
-> Make sure the variables are set!
-
-> [!WARNING]  
-> Instead of `rm -rf` maybe you could use `rm -ri` for interactive mode which prompt before every removal!
+> - Make sure the environment variables are set!
+> - Instead of `rm -rf` maybe you could use `rm -ri` for interactive mode which prompt before every removal!
 
 ```sh
 for VM in "${!newVM[@]}"
