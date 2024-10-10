@@ -94,8 +94,10 @@ My `PTR` records:
 
 <a name="step-2"></a>
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 <p style="text-align:left;">
-    <span style="text-align:right;">
+    <span style="text-align:left;">
         <a href="README.md">🏠 back to README</a>
     </span>
 </p>
@@ -110,7 +112,7 @@ I'm using `Cloud-Init` to create my template VM and then use `virt-clone` to clo
 <a name="step-3"></a>
 
 <p style="text-align:left;">
-    <span style="text-align:right;">
+    <span style="text-align:left;">
         <a href="README.md">🏠 back to README</a>
     </span>
 </p>
@@ -189,7 +191,7 @@ This project is licensed under the [MIT license](/LICENSE).
 
 <p style="text-align:left;">
     <a href="README.md">🏠 back to README</a>
-    <span style="float:right;">
+    <span style="text-align:right;">
         <a href="#readme-top">🎬 back to Top of file</a>
     </span>
 </p>
