@@ -2,9 +2,9 @@
 <a name="readme-top"></a>
 
 # K3s Cluster
-This tutorial will show how to set up a High Availability K3s Cluster on Bare-Metal or more precisely on eleven (11) VMs. All the VMs will be running Ubuntu 24.04 LTS on a single physical KVM node running, as you may have guessed, Ubuntu.
+This tutorial will show how to set up a High Availability K3s Cluster on Bare-Metal or more precisely on eleven (11) VMs. All the VMs will be running Ubuntu 24.04 LTS on a single physical KVM node running, as you may have guessed, Ubuntu but this time version 22.04.
 
-Two nodes are used for load balancing the K3s API endpoint. I have choosen `Nginx`, but you could have used `HAProxy`, for the load balancing and `Keepalived` for the VIP.
+Two nodes are used for load balancing the K3s API endpoints. I have choosen `Nginx`, but you could have used `HAProxy`, for the load balancing. I will use `Keepalived` for the VIP between the `Nginx` servers.
 
 ## High Availibility
 There's two different approaches to setting up a highly available K3s cluster:
@@ -19,10 +19,10 @@ There will be one network to hosts the different components of our K3s cluster. 
 ## Installation Outline
 The high level steps to create our High Availability K3s Cluster are:
 1. Create all the DNS entries.
-2. Create eleven (11) Ubuntu 24.04 LTS VMs.
+2. Create eleven (11) Ubuntu 24.04 LTS VMs. I will be using `Cloud-Init`.
 3. Create a cluster of three `etcd` nodes. This will be our external datastore for the K3s cluster.
 4. Configure a Fixed Registration Address. Two servers will be used as load balancer.
-5. Launch Server Nodes. K3s requires two or more server nodes for an HA configuration. When running the k3s server command, you must set the `datastore-endpoint` parameter so that K3s knows how to connect to the external datastore created in the step above.
+5. Launch the K3s Server Nodes. K3s requires two or more server nodes for an HA configuration. When running the k3s server command, you must set the `datastore-endpoint` parameter so that K3s knows how to connect to the external datastore created in the step above.
 6. Join Agent Nodes. You can join as many as you need.
 
 ## Here's a table that describes every IP addresses of each servers for this tutorial.
@@ -95,13 +95,13 @@ My `PTR` records:
 <a name="step-2"></a>
 
 <p style="text-align:left;">
-    <span style="float:right;">
+    <span style="text-align:right;">
         <a href="README.md">🏠 back to README</a>
     </span>
 </p>
 
 # Step 2: Create the VMs
-I'm using `Cloud-Init` to create my template VM and then use `virt-clone` to clone the eleven (11) VM needed. The VMs will have a standard user account with `sudo` privileges. The IP address/DNS/hostname will be configured, after le cloning step, with `virt-sysprep`. At the end of this step you will have eleven (11) VMs that you can SSH to it ready to install K3s or etcd.
+I'm using `Cloud-Init` to create my template VM and then use `virt-clone` to clone the eleven (11) VMs needed. The VMs will have a standard user account with `sudo` privileges. The IP address/DNS/hostname will be configured, after le cloning step, with `virt-sysprep`. At the end of this step you will have eleven (11) VMs that you can SSH to it ready to install K3s or etcd.
 
 [Create the VMs](10_KVM_Cloud-Init_VMs.md)
 
