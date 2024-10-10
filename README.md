@@ -110,7 +110,7 @@ I'm using `Cloud-Init` to create my template VM and then use `virt-clone` to clo
 <a name="step-3"></a>
 
 <p style="text-align:left;">
-    <span style="float:right;">
+    <span style="text-align:right;">
         <a href="README.md">🏠 back to README</a>
     </span>
 </p>
