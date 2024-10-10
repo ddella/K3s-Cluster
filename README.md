@@ -47,7 +47,7 @@ The high level steps to create our High Availability K3s Cluster are:
   <span style="text-align:left;">
     <a href="README.md">🏠 back to README</a>
   </span>
-  <span style="float:right;">
+  <span style="text-align:right;">
     <a href="#readme-top">🎬 back to Top of file</a>
   </span>
 </p>
