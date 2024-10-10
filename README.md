@@ -44,7 +44,7 @@ The high level steps to create our High Availability K3s Cluster are:
 <a name="step-1"></a>
 
 <div style="float:left;"><a href="README.md">🏠 back to README</a></div>
-<div style="float:right;"><a href="#readme-top">🎬 back to Top of file</div>
+<div style="float:right;"><a href="#readme-top">🎬 back to Top of file</a></div>
 
 # Step 1: DNS entries
 I'm using Bind9 for my internal DNS. Here's the entries for this tutorial.
