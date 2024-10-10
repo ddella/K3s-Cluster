@@ -47,8 +47,8 @@ The high level steps to create our High Availability K3s Cluster are:
 <div style="float:right;"><a href="#readme-top">🎬 back to Top of file</a></div>
 
 <div class="mainlinks">
-  <a href="left.php" style="float:left;">Left</a>
-  <a href="right.php" style="float:right;">Right</a>
+  <a style="float:left;" href="left.php">Left</a>
+  <a style="float:right;" href="right.php">Right</a>
 </div>
 
 
