@@ -43,7 +43,10 @@ The high level steps to create our High Availability K3s Cluster are:
 
 <a name="step-1"></a>
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<div id="links">
+  <p style="float:left;"><a href="README.md">🏠 back to README</a></p>
+  <p style="float:right;"><a href="#readme-top">🎬 back to Top of file</p>
+</div>
 
 # Step 1: DNS entries
 I'm using Bind9 for my internal DNS. Here's the entries for this tutorial.
@@ -94,13 +97,10 @@ My `PTR` records:
 
 <a name="step-2"></a>
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<p style="text-align:left;">
-    <span style="text-align:left;">
-        <a href="README.md">🏠 back to README</a>
-    </span>
-</p>
+<div id="links">
+  <p style="float:left;"><a href="README.md">🏠 back to README</a></p>
+  <p style="float:right;"><a href="#readme-top">🎬 back to Top of file</p>
+</div>
 
 # Step 2: Create the VMs
 I'm using `Cloud-Init` to create my template VM and then use `virt-clone` to clone the eleven (11) VMs needed. The VMs will have a standard user account with `sudo` privileges. The IP address/DNS/hostname will be configured, after le cloning step, with `virt-sysprep`. At the end of this step you will have eleven (11) VMs that you can SSH to it ready to install K3s or etcd.
@@ -111,11 +111,10 @@ I'm using `Cloud-Init` to create my template VM and then use `virt-clone` to clo
 
 <a name="step-3"></a>
 
-<p style="text-align:left;">
-    <span style="text-align:left;">
-        <a href="README.md">🏠 back to README</a>
-    </span>
-</p>
+<div id="links">
+  <p style="float:left;"><a href="README.md">🏠 back to README</a></p>
+  <p style="float:right;"><a href="#readme-top">🎬 back to Top of file</p>
+</div>
 
 # Step 3: Create the etcd cluster
 At this stage you should have all the VMs needed to build your K3s1 Cluster in high availibility. Let's create your etcd cluster.
@@ -124,11 +123,10 @@ At this stage you should have all the VMs needed to build your K3s1 Cluster in h
 
 <a name="step-4"></a>
 
-<p style="text-align:left;">
-    <span style="float:right;">
-        <a href="README.md">🏠 back to README</a>
-    </span>
-</p>
+<div id="links">
+  <p style="float:left;"><a href="README.md">🏠 back to README</a></p>
+  <p style="float:right;"><a href="#readme-top">🎬 back to Top of file</p>
+</div>
 
 # Step 4: Create the load balancer
 It's time to create our load balancer for the K3s1 API. Let's use two servers with NGINX and Keealived to achieve this task.
@@ -139,11 +137,10 @@ It's time to create our load balancer for the K3s1 API. Let's use two servers wi
 
 <a name="step-5"></a>
 
-<p style="text-align:left;">
-    <span style="float:right;">
-        <a href="README.md">🏠 back to README</a>
-    </span>
-</p>
+<div id="links">
+  <p style="float:left;"><a href="README.md">🏠 back to README</a></p>
+  <p style="float:right;"><a href="#readme-top">🎬 back to Top of file</p>
+</div>
 
 # Step 5: Launch K3s Server nodes
 It's time to launch are K3s Server Nodes. This is the same as a Master node in pure Kubernetes 😉 Here I'm launcing the first K3s Server node and two more are added at the end.
@@ -152,21 +149,19 @@ It's time to launch are K3s Server Nodes. This is the same as a Master node in p
 
 <a name="step-6"></a>
 
-<p style="text-align:left;">
-    <span style="float:right;">
-        <a href="README.md">🏠 back to README</a>
-    </span>
-</p>
+<div id="links">
+  <p style="float:left;"><a href="README.md">🏠 back to README</a></p>
+  <p style="float:right;"><a href="#readme-top">🎬 back to Top of file</p>
+</div>
 
 # Step 6: Join agent node(s)
 
 [Launch agent nodes](15_Create_agent_node.md)
 
-<p style="text-align:left;">
-    <span style="float:right;">
-        <a href="README.md">🏠 back to README</a>
-    </span>
-</p>
+<div id="links">
+  <p style="float:left;"><a href="README.md">🏠 back to README</a></p>
+  <p style="float:right;"><a href="#readme-top">🎬 back to Top of file</p>
+</div>
 
 # Congratulation
 You should have a six-node K3s cluster in **High Availibility** mode 🍾🎉🥳
@@ -189,12 +184,10 @@ k3s1server3.kloud.lan   Ready    control-plane,master   5d      v1.30.5+k3s1   1
 
 This project is licensed under the [MIT license](/LICENSE).  
 
-<p style="text-align:left;">
-    <a href="README.md">🏠 back to README</a>
-    <span style="text-align:right;">
-        <a href="#readme-top">🎬 back to Top of file</a>
-    </span>
-</p>
+<div id="links">
+  <p style="float:left;"><a href="README.md">🏠 back to README</a></p>
+  <p style="float:right;"><a href="#readme-top">🎬 back to Top of file</p>
+</div>
 
 # References
 [virt-install - provision new virtual machines](https://manpages.ubuntu.com/manpages/noble/man1/virt-install.1.html)  
