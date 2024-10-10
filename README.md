@@ -44,7 +44,7 @@ The high level steps to create our High Availability K3s Cluster are:
 <a name="step-1"></a>
 
 <p>
-  <span style="text-align:left;">
+  <span style="float:left;">
     <a href="README.md">🏠 back to README</a>
   </span>
   <span style="text-align:right;">
@@ -77,7 +77,7 @@ k3s1etcd2         IN A      10.30.100.72
 k3s1etcd3         IN A      10.30.100.73
 ```
 
-My `PTR` records:
+My `PTR` records for `10.in-addr.arpa`:
 ```
 ; **************************************
 ; *********** K3s Cluster 1 ************
